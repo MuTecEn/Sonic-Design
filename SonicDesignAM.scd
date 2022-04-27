@@ -2,6 +2,7 @@
 
 // Are you ready for your electroacoustic music trip?
 
+s.volume = -12; // to avoid distortion
 
 h = NodeProxy.new.play;
 h.fadeTime = 2;
