@@ -1,86 +1,105 @@
 // Welcome to Sonic Design Seminar 2022!
 
-// Are you ready for your electroacoustic music travel?
+// Are you ready for your electroacoustic music trip?
 
-o = Buffer.read(s, "C:/Users/user/Desktop/sounds/violins.wav");
 
-// It all started in the middle of the 19th century..
+h = NodeProxy.new.play;
+h.fadeTime = 2;
+h.source = { var trigger, carrier, modulator, envelope; trigger = Impulse.kr(0.5); envelope = Linen.kr(gate: trigger, attackTime: 1.2, susLevel: 0.5, releaseTime: 0.7); carrier = Mix.ar(FSinOsc.ar( freq: [ 48, 55, 59, 62 ].midicps)); Out.ar([0, 1], carrier * envelope * 0.1);};
 
-// Additive Synthesis (based on Fourier Theorem)
 
-// Starting with one oscillator
 
-a = NodeProxy.new.play;
-a.fadeTime = 2;
-a.source = { FSinOsc.ar(freq: 262, mul:0.5)};
+// load our buffers
 
-// Adding 4 oscillators
+o = Buffer.read(s, "C:/Users/user/Desktop/sounds/Hist1.wav");
+q = Buffer.read(s, "C:/Users/user/Desktop/sounds/untitled.wav");
+
+
+// load our Synths
+
+// piano synth
 
 (
-
-a.source = { Mix.ar(FSinOsc.ar(freq: [207,261,311,415],mul: 0.2)) };
-
-SystemClock.sched(20, {
-  a.source = { Mix.ar(FSinOsc.ar(freq: [311,392,466,622],mul: 0.2)) };
-  "wait 20 secs".postln;
-} );
-
-SystemClock.sched(40, {
-	a.source = { Mix.ar(FSinOsc.ar(freq: [233,293,349,466],mul: 0.2))};
-  "wait 40 secs".postln;
-} );
-
-SystemClock.sched(60, {
-	a.source = { Mix.ar(FSinOsc.ar(freq: [174,220,261,349],mul: 0.2))};
-  "wait 60 secs".postln;
-} );
-
-SystemClock.sched(80, {
-	a.source = { Mix.ar(FSinOsc.ar(freq: [207,261,311,415],mul: 0.2))};
-  "wait 80 secs".postln;
-} );
-
-SystemClock.sched(100, { a.free; "wait 100 secs".postln; });
-
+SynthDef(\piano, {
+  arg freq = 50, index = 0.7, release = 2;
+  var modFreq1, modFreq2, depth1, depth2, envelope, modulators, fm;
+  modFreq1 = freq * 1.01;
+  modFreq2 = freq * 4.01;
+  index = 0.7;
+  depth1 = modFreq1 * index;
+  depth2 = modFreq2 * index;
+  envelope = EnvGen.kr(Env.perc(attackTime: 0,releaseTime: release, curve: -4), doneAction:2);
+  modulators = SinOsc.ar(modFreq1, mul: depth1) + SinOsc.ar(modFreq2, mul: depth2);
+  fm = SinOsc.ar(freq + modulators, mul: envelope);
+  Out.ar([0, 1], fm * 0.3);
+}).add;
 );
 
-// This era is called Early Electroacoustic (1948-1960)
-
-// Let's take a train back in time and imagine we are in Europe..
-
-//...and more specifically, in the NWDR studio in Germany!
-
-// In Cologne, Elektronische Musik was born..
-
-// Herbert Eimert - serialism
-// (based on Schoenberg's 12-tone technique)
+// bell Synth
 
 (
-{
-    var sig, noiseLfo;
-    noiseLfo = LFNoise1.kr(50);
-    sig = Mix.ar(LFTri.ar(freq: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], mul: LFPulse.ar(freq: noiseLfo.range(0.5,15), width: 0.4)));
-    sig = LPF.ar(sig, noiseLfo.range(262, 523));
-    sig = FreeVerb.ar(sig);
-    Out.ar(0, Pan2.ar(sig, noiseLfo.range(1,-1)) * 0.2);
-}.play;
+SynthDef(\bell,
+{   var partials, env;
+    partials = SinOsc.ar(freq:262,mul: 0.3)+
+    SinOsc.ar(freq:277,mul: 0.25)+
+    SinOsc.ar(freq:340,mul: 0.1)+
+    SinOsc.ar(freq:385,mul: 0.2)+
+    SinOsc.ar(freq:605,mul: 0.3)+
+    SinOsc.ar(freq:670,mul: 0.1)+
+    SinOsc.ar(freq:812,mul: 0.1);
+    env = XLine.ar(start: 0.5, end: 0.0001, dur: 10);
+    Out.ar([0, 1], partials * env);
+}).add;
+);
+
+// string synth
+
+(
+SynthDef(\cfstring1, { arg i_out, freq = 360, gate = 1, pan, amp=0.1;
+    var out, eg, fc, osc, a, b, w;
+    fc = LinExp.kr(LFNoise1.kr(Rand(0.25, 0.4)), -1, 1, 500, 2000);
+    osc = Mix.fill(8, {LFSaw.ar(freq * [Rand(0.99, 1.01), Rand(0.99, 1.01)], 0, amp) }).distort * 0.2;
+    eg = EnvGen.kr(Env.asr(1, 1, 1), gate, doneAction: Done.freeSelf);
+    out = eg * RLPF.ar(osc, fc, 0.1);
+    #a, b = out;
+    Out.ar(i_out, Mix.ar(PanAz.ar(4, [a, b], [pan, pan+0.3])));
+}).add;
 )
 
-x = Pbind(\instrument, \default, \freq, 262, \dur, 0.5 ).play;
+// sampling synth
 
-a = Pseq(list: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], repeats: inf);
+(
+SynthDef(\slicer, {
+  arg out = 0, amp = 0.8, t = 2;
+  var trig, beat, pos, sig, direction, beatList;
+  beatList = (0..31);
+    trig = Impulse.kr( t / (o.duration / beatList.size) );
+   beat =TChoose.kr( trig, beatList );
+    pos = beat  * (o.numFrames / beatList.size);
+  direction = TWChoose.kr(trig, [-1, 1], [0.5, 0.3]);
+  sig = PlayBuf.ar(2, o, direction, trig, pos);
+  Out.ar(out, amp * sig);
+}).add;
+)
+
+// chorus synth
+
+(
+SynthDef(\chorus, {
+  arg  buf,  rate1 = 5, rate2 = 5.1, rate3 = 5.2, wet = 1;
+  var sig, delay1, delay2, delay3, bankOfDelays, out;
+  sig = PlayBuf.ar(1, buf, loop:1);
+  delay1 = DelayL.ar(sig, delaytime: SinOsc.kr(rate1, mul: 0.001, add: 0.03));
+  delay2 = DelayL.ar(sig, delaytime: SinOsc.kr(rate2, mul: 0.001, add: 0.022));
+  delay3 = DelayL.ar(sig, delaytime: LFTri.kr(rate3, mul: 0.001, add: 0.027));
+  bankOfDelays = delay1 + delay2 + delay3;
+  out = sig + (bankOfDelays * wet);
+  Out.ar([0, 1], out);
+}).add;
+)
 
 
-// Karlheinz Stockhausen - Aleatory Techniques
-// some musical aspects are left to chance
-
-x = Pbind(\instrument, \default, \freq, a, \dur, 0.5 ).play;
-
-a = Prand(list: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], repeats: inf);
-
-x = Pbind(\instrument, \default, \freq, a, \dur, 0.5 ).play;
-
-// ..and now let's visit Paris, France!
+// impulsive sound synth
 
 (
 SynthDef(\impulse, {
@@ -93,13 +112,8 @@ SynthDef(\impulse, {
 }).add;
 )
 
-y = Synth(\impulse);
-c = NodeProxy.new.play;
-c.fadeTime = 2;
-c.source = Pbind(\instrument, \impulse).play;
-c.clear(3)
 
-// Here we will meet Musique Concrete
+// sustained sound synth
 
 (
 SynthDef.new(\sustained,{
@@ -119,71 +133,13 @@ SynthDef.new(\sustained,{
 }).add;
 )
 
-x = Synth.new(\sustained);
+
+// bass synth
 
 (
-
-SystemClock.sched(8, {
-  x = Synth.new(\sustained);
-  "wait 8 secs".postln;
-} );
-
-SystemClock.sched(16, {
-	x = Synth.new(\sustained);
-  "wait 16 secs".postln;
-} );
-
-SystemClock.sched(24, {
-	x = Synth.new(\sustained);
-  "wait 24 secs".postln;
-} );
-
-SystemClock.sched(32, {
-	x = Synth.new(\sustained);
-  "wait 32 secs".postln;
-} );
-
-SystemClock.sched(40, { x.free; "wait 40 secs".postln; });
-
-);
-
-// The 'polar opposite' of Elektronische Musik
-
-// (iterative sound under construction)
-
-// Pierre Schaeffer - Sampling
-
-(
-SynthDef(\slicer, {
-  arg out = 0, amp = 0.8, t = 2;
-  var trig, beat, pos, sig, direction, beatList;
-  beatList = (0..31);
-    trig = Impulse.kr( t / (o.duration / beatList.size) );
-   beat =TChoose.kr( trig, beatList );
-    pos = beat  * (o.numFrames / beatList.size);
-  direction = TWChoose.kr(trig, [-1, 1], [0.5, 0.3]);
-  sig = PlayBuf.ar(2, o, direction, trig, pos);
-  Out.ar(out, amp * sig);
-}).add;
-)
-
-~player1 = Synth(\slicer, [\bufnum, o]);
-~player1.set(\t, 4);
-
-// Let's take a trip to USA!
-
-// John Cage
-
-// ctlr + .
-
-// 4:23 minutes later..
-
-// Moving on to the Electroacoustic Music Evolution (1960-1990)
-
-(
-SynthDef("MyBass", { arg freq = 40, sustain = 1, amp = 0.06, att = 0.1, rel = 2, lofreq = 1000, hifreq = 3000;
-    var env, snd;
-    snd = Saw.ar(freq: freq * [0.99, 1, 1.001, 1.008]);
+SynthDef("MyBass", { arg freq = 40, sustain = 1, amp = 0.08, att = 0.1, rel = 5, lofreq = 1000, hifreq = 3000;
+    var env = Line.kr(start: 0.7, end: 0, dur: 10), snd;
+    snd = Saw.ar(freq: freq * [0.99, 1, 1.001, 1.008], mul: env);
 	snd = LPF.ar(
 		in: snd,
 		freq: LFNoise2.kr(1).range(lofreq, hifreq)
@@ -193,64 +149,34 @@ SynthDef("MyBass", { arg freq = 40, sustain = 1, amp = 0.06, att = 0.1, rel = 2,
 }).add;
 )
 
-~playMyBass = Synth(\MyBass);
 
-// Sound spatialization
-
-// (multichannel expansion under construction)
-
-// Xenakis - Stochastic Music -- (FIND A WAY TO STOP!)
+// glitches synth
 
 (
-h = {Pan2.ar(
-Normalizer.ar(
-RLPF.ar(
-RLPF.ar(Gendy2.ar(a:SinOsc.kr(0.4,0,0.05,0.05),c:SinOsc.kr(0.3,0,0.1,0.5)),
-MouseX.kr(10,10000,'exponential'),0.05),
-MouseY.kr(10,10000,'exponential'),0.05)
-,0.9)
-,Lag.kr(LFNoise0.kr(1),0.5))}.play;
+SynthDef(\chaosGlitch, {
+	arg len = 10, fundFreq = 50, henA = 2, henB = 0.4, t = 1, gate = 1;
+	var mainEnv = EnvGen.kr(Env.adsr(len,1), gate, doneAction:2);
+	var speed = Array.geom(4, t, [1.75, 1.25].choose);
+	var freq = Array.geom(8, fundFreq*2, 1.5);
+	var pulse = {|rat1,rat2|LFPulse.ar(rat1, [0,0.5,1].choose)*LFPulse.ar(rat2)};
+	var a = Lag.ar(HenonN.ar(
+		speed.choose*(mainEnv*10000.rand),
+		henA, henB,
+	), 0.01);
+	var bass = SinOsc.ar(fundFreq!2*(a*1.0.rand), 0, Lag.ar(pulse.(t, speed.choose), 0.001));
+	var tone1 = SinOsc.ar([(fundFreq+Rand(0,5))*a,(fundFreq+Rand(0,5))*a], 0, 0.01*pulse.(speed.choose, speed.choose));
+	var tone2 = Pan2.ar(SinOsc.ar(freq.choose*a, 0, 0.1*pulse.(speed.choose, t)), a);
+	var tone3 = SinOsc.ar([freq.choose,freq.choose*a], 0, 0.05*pulse.(speed.choose, t))*mainEnv.round(0.25);
+	var noise = Pan2.ar(PinkNoise.ar(a*0.1*pulse.(t,t)), a);
+	var impulse = RLPF.ar(Impulse.ar(pulse.(t, speed.choose), a), freq.choose+(a*10), 0.01, 0.1).tanh;
+
+	Out.ar(0, (bass+tone1+tone2+tone3+noise+impulse).tanh);
+	}
+).store;
 )
-
-// ..and we are in the Digital Age! (1990-)
-
-// Post-Schaefferian Electronica
-// Noise
-
-b = NodeProxy.new.play;
-b.fadeTime = 2;
-b.source = {WhiteNoise.ar(0.05,0)};
-
-// a hi-hat sound using white noise and a resonant high-pass filter
-c = NodeProxy.new.play;
-c.fadeTime = 2;
-c.source = { var hihat, env; hihat = RHPF.ar(in: WhiteNoise.ar(0.1), freq: 9000, rq: 0.4); env = EnvGen.kr(envelope: Env.perc(0.01, 0.4), gate: Impulse.kr(2)); hihat.dup * env * 0.4};
-
-
-
-// microsounds (glitches)
-
-(
-SynthDef(\glitch,
-{
-arg rate = 1, freq = 60, index = 1000, tRate = 100,
-out = 0, fRate = 0.1;
-
-var t_trig = LFPulse.kr(0.5/fRate, 0.5, mul: 0.1);
-var random = LFNoise0.ar(rate,0.1, 1);
-var noise = Hasher.ar(random);
-var sound = Saw.ar((freq+(noise*index)), Decay.kr(Impulse.kr(tRate), noise*0.001)).tanh;
-sound = Pan2.ar(sound, noise-0.3*2);
-FreeSelf.kr(t_trig);
-Out.ar(out, sound);
-}).store;
-)
-
-
-z = Pbind(\instrument, \glitch,\dur, 20,\rate, Pfuncn{261.rand},\freq, Pfuncn{1046.rand},\index, Pfuncn{523.rand},\tRate, Pfuncn{1100.rand},\fRate, 5).play;
-
 
 // Ambience
+
 
 (
 SynthDef("klankPink", {
@@ -267,15 +193,217 @@ SynthDef("klankPink", {
 }).add;
 )
 
-~nice = Synth("klankPink");
+///////////////////////////////////////////////////////////////////
 
 
-// Soundscape
+// It all started in the middle of the 20th century..
+
+
+///////////////////////////////////////////////////////////////////
+
+l = Synth(\bell);
+
+
+
+
+
+// Additive Synthesis (based on Fourier Theorem)
+
+// Starting with one oscillator
+
+
+a = NodeProxy.new.play;
+a.fadeTime = 2;
+a.source = {FSinOsc.ar(freq:262, mul:0.2)};
+
+
+
+// Adding 4 oscillators
+
+
+(
+a.source = {Mix.ar(FSinOsc.ar(freq:[207,262,311,415], mul:0.2))};
+
+SystemClock.sched(10, {a.source = {Mix.ar(FSinOsc.ar(freq:[233,293,349,466], mul:0.2))};});
+
+SystemClock.sched(20, {a.source = {Mix.ar(FSinOsc.ar(freq:[207,262,311,415], mul:0.2))};});
+
+SystemClock.sched(30, {a.clear(5)};);
+)
+
+
+///////////////////////////////////////////////////////////////////
+
+
+// This era is called Early Electroacoustic (1948-1960)
+// Let's take a train back in time and imagine we are in Europe..
+//...and more specifically, in the NWDR studio in Germany!
+// In Cologne, Elektronische Musik was born..
+
+
+///////////////////////////////////////////////////////////////////
+
+
+// Herbert Eimert - serialism
+// (based on Schoenberg's 12-tone technique)
+
+
+b = NodeProxy.new.play;
+b.fadeTime = 2;
+b.source = {f = LFSaw.kr(0.4, 0, 24, LFSaw.kr([8,7.23], 0, 3, 80)).midicps;	CombN.ar(SinOsc.ar(f,0,0.04), 0.2, 0.2,4)};
+b.clear(5);
+
+
+c = NodeProxy.new.play;
+c.fadeTime = 2;
+c.source = { var sig, noiseLfo; noiseLfo = LFNoise1.kr(50); sig = Mix.ar(LFTri.ar(freq: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], mul: LFPulse.ar(freq: noiseLfo.range(0.5,15), width: 0.4))); sig = LPF.ar(sig, noiseLfo.range(262, 523)); sig = FreeVerb.ar(sig); Out.ar(0, Pan2.ar(sig, noiseLfo.range(1,-1)) * 0.2);};
+
+
+x = Pbind(\instrument, \piano, \freq, 262, \dur, 0.5).play;
+x.stop;
+y = Pbind(\instrument, \piano, \freq, p, \dur, 0.5).play;
+y.stop;
+p = Prand(list: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], repeats: inf );
+
+
+
+///////////////////////////////////////////////////////////////////
+
+// Karlheinz Stockhausen - Aleatory Techniques
+// some musical aspects are left to chance
+
+
+z = Pbind(\instrument, \piano, \freq, p, \dur, 0.5).play;
+
+///////////////////////////////////////////////////////////////////
+
+// ..and now let's visit Paris, France!
+
+// Here we will meet Musique Concrete
+
+// The 'polar opposite' of Elektronische Musik
+
+///////////////////////////////////////////////////////////////////
+
+
+// Pierre Schaeffer - Sampling
+
+~player1 = Synth(\slicer, [\bufnum, o]);
+
+x.stop;
+y.stop;
+z.stop;
+
+i = Synth(\impulse);
+
+~chorus = Synth(\chorus,[\bufnum,b]);
+~chorus.free;
+~player1.set(\t, 8);
+
+t = Synth(\sustained);
+
+m = NodeProxy.new.play;
+m.fadeTime = 2;
+m.source = {BPZ2.ar(WhiteNoise.ar(LFPulse.kr(MouseX.kr(0.2,50), 0, 0.25, 0.1)))};
+m.clear(3);
+
+b.clear(5);
+c.clear(5);
+
+
+///////////////////////////////////////////////////////////////////
+
+// Moving to the USA
+// John Cage
+
+h.clear(5);
+q.play;
+
+
+~player1.free;
+
+///////////////////////////////////////////////////////////////////
+
+// Moving on to the Electroacoustic Music Evolution (1960-1990)
+
+~player2 = Synth(\MyBass);
+
+
+///////////////////////////////////////////////////////////////////
+
+
+// Xenakis - Stochastic Music
+// watch the cursor!
+
+k = NodProxy.new.play;
+k.fadeTime = 2;
+k.source = { var f, p, z, offset; f = 50; p = 20; z = 0.0; offset = Line.kr(0, -0.02, 60); p.do({ arg i; z = FSinOsc.ar( f * (i+1),0, max(0, LFNoise1.kr( 6 + [4.0.rand2, 4.0.rand2],  0.02, ) ), z ) }); z }.play;
+
 
 d = NodeProxy.new.play;
 d.fadeTime = 2;
-d.source = { Mix.fill(10,{var freq; freq= rrand(130,160.3);  Pan2.ar(SinOsc.ar(Gendy2.ar(6.rand,6.rand,SinOsc.kr(0.1,0,0.49,0.51),SinOsc.kr(0.13,0,0.49,0.51),freq ,freq, SinOsc.kr(0.17,0,0.49,0.51), SinOsc.kr(0.19,0,0.49,0.51),12, 12, 0.4.rand, 0.4.rand, 200, 400), 0, 0.1), 1.0.rand2)})};
+d.source  = {Pan2.ar(Normalizer.ar(RLPF.ar(RLPF.ar(Gendy2.ar(a:SinOsc.kr(0.4,0,0.05,0.05),c:SinOsc.kr(0.3,0,0.1,0.5)),MouseX.kr(10,10000,'exponential'),0.05),MouseY.kr(10,10000,'exponential'),0.05),0.9),Lag.kr(LFNoise0.kr(1),0.5))};
 
-// fade the sound out
+
+///////////////////////////////////////////////////////////////////
+
+// ..and we are in the Digital Age! (1990-)
+
+// Post-Schaefferian Electronica
+// Noise
+
+e = NodeProxy.new.play;
+e.fadeTime = 2;
+e.source = {WhiteNoise.ar(0.05,0)};
+
+// a hi-hat sound using white noise and a resonant high-pass filter
+
+e.source = {var hihat, env; hihat = RHPF.ar(in: WhiteNoise.ar(0.1), freq: 9000, rq: 0.4); env = EnvGen.kr(envelope: Env.perc(0.01, 0.4), gate: Impulse.kr(2)); hihat.dup * env * 0.4};
+
+e.clear(5);
+
+///////////////////////////////////////////////////////////////////
+
+// microsounds (glitches) 
+
+f= Pbind(\instrument, \chaosGlitch,\dur, 10,\len, Prand([1, 1.5, 1.75, 2]+10,inf),\henA, Pseq([2, 1.3, 1.29, 1.25], inf),	\henB, Pseq([0.2, 0.3], inf),\t, Prand([2, 4, 2, 6], inf),\fundFreq, Prand([40, 600, 8000, 200, 600, 6000], inf)).play;
+
+
+
+
+///////////////////////////////////////////////////////////////////
+
+// Ambience
+
+
+~player3 = Synth("klankPink");
+
+
+
+k.clear(5);
+d.clear(5);
+e.clear(5);
+f.stop;
+
+
+///////////////////////////////////////////////////////////////////
+
+// Soundscape
+
+g = NodeProxy.new.play;
+g.fadeTime = 2;
+g.source = {Mix.fill(10,{var freq; freq= rrand(130,160.3);  Pan2.ar(SinOsc.ar(Gendy2.ar(6.rand,6.rand,SinOsc.kr(0.1,0,0.49,0.51),SinOsc.kr(0.13,0,0.49,0.51),freq ,freq, SinOsc.kr(0.17,0,0.49,0.51), SinOsc.kr(0.19,0,0.49,0.51),12, 12, 0.4.rand, 0.4.rand, 200, 400), 0, 0.1), 1.0.rand2)})};
+
+
+
+~player3.free;
+g.clear(5);
+f.clear(5);
+
+l = Synth(\bell);
+
+
+///////////////////////////////////////////////////////////////////
+
 
 // Thank you, I hope you enjoyed your trip!
