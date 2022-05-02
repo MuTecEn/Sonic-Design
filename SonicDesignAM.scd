@@ -8,7 +8,13 @@ s.volume = -12; // to avoid distortion
 
 a = NodeProxy.new.play;
 a.fadeTime = 2;
-a.source = { var trigger, carrier, modulator, envelope; trigger = Impulse.kr(0.5); envelope = Linen.kr(gate: trigger, attackTime: 1.2, susLevel: 0.5, releaseTime: 0.7);carrier = Mix.ar(FSinOsc.ar( freq: [ 50, 52, 59, 62 ].midicps)); Out.ar([0, 1], carrier * envelope * 0.1);};
+a.source = { 
+	var trigger, carrier, modulator, envelope; 
+	trigger = Impulse.kr(0.5); 
+	envelope = Linen.kr(gate: trigger, attackTime: 1.2, susLevel: 0.5, releaseTime: 0.7);
+	carrier = Mix.ar(FSinOsc.ar( freq: [ 50, 52, 59, 62 ].midicps));
+	Out.ar([0, 1], carrier * envelope * 0.1);
+	};
 
 
 // load our buffers
@@ -250,13 +256,23 @@ SystemClock.sched(30, {c.clear(5)};);
 
 d = NodeProxy.new.play;
 d.fadeTime = 2;
-d.source = {f = LFSaw.kr(0.4, 0, 24, LFSaw.kr([8,7.23], 0, 3, 80)).midicps;	CombN.ar(SinOsc.ar(f,0,0.04), 0.2, 0.2,4)};
+d.source = {
+	f = LFSaw.kr(0.4, 0, 24, LFSaw.kr([8,7.23], 0, 3, 80)).midicps;	
+	CombN.ar(SinOsc.ar(f,0,0.04), 0.2, 0.2,4)
+	};
 d.clear(5);
 
 
 e = NodeProxy.new.play;
 e.fadeTime = 2;
-e.source = { var sig, noiseLfo; noiseLfo = LFNoise1.kr(50); sig = Mix.ar(LFTri.ar(freq: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], mul: LFPulse.ar(freq: noiseLfo.range(0.5,15), width: 0.4))); sig = LPF.ar(sig, noiseLfo.range(262, 523)); sig = FreeVerb.ar(sig); Out.ar(0, Pan2.ar(sig, noiseLfo.range(1,-1)) * 0.2);};
+e.source = { 
+	var sig, noiseLfo; 
+	noiseLfo = LFNoise1.kr(50); 
+	sig = Mix.ar(LFTri.ar(freq: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], 
+	mul: LFPulse.ar(freq: noiseLfo.range(0.5,15), width: 0.4))); 
+	sig = LPF.ar(sig, noiseLfo.range(262, 523)); 
+	sig = FreeVerb.ar(sig); Out.ar(0, Pan2.ar(sig, noiseLfo.range(1,-1)) * 0.2);
+	};
 
 
 x = Pbind(\instrument, \piano, \freq, 262, \dur, 0.5).play;
@@ -329,7 +345,20 @@ e.clear(5);
 
 ~steady=Routine({var i=0;{var pitch=~freqs[i%12];Synth(\piano, [freq:pitch,pan:-0.4]);	i=i+1;0.25.wait;}.loop;});
 
-~phasing=Routine({var i=0, phase=0;	{var pitch=~freqs[i%12];Synth(\piano, [freq:pitch, pan:0.4]);i=i+1;if (rrand(0, 80)==0, {			~time=0.24;phase=i;});if (i-phase==25, {phase=0;~time=0.25;});		~time.wait;}.loop;});
+~phasing=Routine(
+	{
+	var i=0, phase=0;
+	{var pitch=~freqs[i%12];
+	Synth(\piano, [freq:pitch, pan:0.4]);i=i+1;if (rrand(0, 80)==0, 
+	{
+	~time=0.24;phase=i;});
+	if (i-phase==25, 
+		{phase=0;
+		~time=0.25;
+		});
+		~time.wait;}.loop;
+	}
+	);
 
 ~inst1=~steady.play;
 ~inst2=~phasing.play;
@@ -363,7 +392,15 @@ q.play;
 
 i = NodeProxy.new.play;
 i.fadeTime = 2;
-i.source = { var f, p, z, offset; f = 50; p = 20; z = 0.0; offset = Line.kr(0, -0.02, 60); p.do({ arg i; z = FSinOsc.ar( f * (i+1),0, max(0, LFNoise1.kr( 6 + [4.0.rand2, 4.0.rand2],  0.02, ) ), z ) }); z };
+i.source = { 
+	var f, p, z, offset; 
+	f = 50; 
+	p = 20; 
+	z = 0.0; 
+	offset = Line.kr(0, -0.02, 60); 
+	p.do({ arg i; z = FSinOsc.ar( f * (i+1),0, max(0, LFNoise1.kr( 6 + [4.0.rand2, 4.0.rand2],  0.02, ) ), z ) });
+	z 
+	};
 
 
 // inspired by Diamorphoses
@@ -371,7 +408,11 @@ i.source = { var f, p, z, offset; f = 50; p = 20; z = 0.0; offset = Line.kr(0, -
 
 j = NodeProxy.new.play;
 j.fadeTime = 2;
-j.source  = {Pan2.ar(Normalizer.ar(RLPF.ar(RLPF.ar(Gendy2.ar(a:SinOsc.kr(0.4,0,0.05,0.05),c:SinOsc.kr(0.3,0,0.1,0.5)),MouseX.kr(10,10000,'exponential'),0.05),MouseY.kr(10,10000,'exponential'),0.05),0.9),Lag.kr(LFNoise0.kr(1),0.5))};
+j.source  = {
+	Pan2.ar(Normalizer.ar(RLPF.ar(RLPF.ar(Gendy2.ar(a:SinOsc.kr(0.4,0,0.05,0.05),
+	c:SinOsc.kr(0.3,0,0.1,0.5)),MouseX.kr(10,10000,'exponential'),0.05),MouseY.kr(10,10000,'exponential'),0.05),0.9),
+	Lag.kr(LFNoise0.kr(1),0.5))
+	};
 
 
 ///////////////////////////////////////////////////////////////////
@@ -389,14 +430,19 @@ k.source = {WhiteNoise.ar(0.05,0)};
 
 // a hi-hat sound using white noise and a resonant high-pass filter
 
-k.source = {var hihat, env; hihat = RHPF.ar(in: WhiteNoise.ar(0.1), freq: 9000, rq: 0.4); env = EnvGen.kr(envelope: Env.perc(0.01, 0.4), gate: Impulse.kr(2)); hihat.dup * env * 0.4};
+k.source = {
+	var hihat, env; 
+	hihat = RHPF.ar(in: WhiteNoise.ar(0.1), freq: 9000, rq: 0.4); 
+	env = EnvGen.kr(envelope: Env.perc(0.01, 0.4), gate: Impulse.kr(2)); hihat.dup * env * 0.4
+	};
 
 
 ///////////////////////////////////////////////////////////////////
 
 // microsounds (glitches)
 
-l = Pbind(\instrument, \chaosGlitch,\dur, 10,\len, Prand([1, 1.5, 1.75, 2]+10,inf),\henA, Prand([2, 1.3, 1.29, 1.25], inf),	\henB, Prand([0.2, 0.3], inf),\t, Prand([2, 4, 2, 6], inf),\fundFreq, Prand([40, 600, 8000, 200, 600, 6000], inf)).play;
+l = Pbind(\instrument, \chaosGlitch, \dur, 10, \len, Prand([1, 1.5, 1.75, 2]+10,inf), \henA, Prand([2, 1.3, 1.29, 1.25], inf),
+\henB, Prand([0.2, 0.3], inf), \t, Prand([2, 4, 2, 6], inf), \fundFreq, Prand([40, 600, 8000, 200, 600, 6000], inf)).play;
 
 
 ///////////////////////////////////////////////////////////////////
@@ -419,7 +465,11 @@ l.stop;
 
 m = NodeProxy.new.play;
 m.fadeTime = 2;
-m.source = {Mix.fill(10,{var freq; freq= rrand(130,160.3);  Pan2.ar(SinOsc.ar(Gendy2.ar(6.rand,6.rand,SinOsc.kr(0.1,0,0.49,0.51),SinOsc.kr(0.13,0,0.49,0.51),freq ,freq, SinOsc.kr(0.17,0,0.49,0.51), SinOsc.kr(0.19,0,0.49,0.51),12, 12, 0.4.rand, 0.4.rand, 200, 400), 0, 0.1), 1.0.rand2)})};
+m.source = {
+	Mix.fill(10,{var freq; freq= rrand(130,160.3);
+	Pan2.ar(SinOsc.ar(Gendy2.ar(6.rand,6.rand,SinOsc.kr(0.1,0,0.49,0.51),SinOsc.kr(0.13,0,0.49,0.51),freq ,freq, SinOsc.kr(0.17,0,0.49,0.51), 
+	SinOsc.kr(0.19,0,0.49,0.51),12, 12, 0.4.rand, 0.4.rand, 200, 400), 0, 0.1), 1.0.rand2)})
+	};
 
 
 
