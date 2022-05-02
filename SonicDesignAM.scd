@@ -428,7 +428,8 @@ k.source = {WhiteNoise.ar(0.05,0)};
 
 
 
-// a hi-hat sound using white noise and a resonant high-pass filter
+// transforming White Noise into a hi-hat 
+// using a resonant high-pass filter
 
 k.source = {
 	var hihat, env; 
