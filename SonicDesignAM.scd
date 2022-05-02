@@ -8,7 +8,13 @@ s.volume = -12; // to avoid distortion
 
 a = NodeProxy.new.play;
 a.fadeTime = 2;
-a.source = { var trigger, carrier, modulator, envelope; trigger = Impulse.kr(0.5); envelope = Linen.kr(gate: trigger, attackTime: 1.2, susLevel: 0.5, releaseTime: 0.7); carrier = Mix.ar(FSinOsc.ar( freq: [ 48, 55, 59, 62 ].midicps)); Out.ar([0, 1], carrier * envelope * 0.1);};
+a.source = { 
+	var trigger, carrier, modulator, envelope; 
+	trigger = Impulse.kr(0.5); 
+	envelope = Linen.kr(gate: trigger, attackTime: 1.2, susLevel: 0.5, releaseTime: 0.7);
+	carrier = Mix.ar(FSinOsc.ar( freq: [ 48, 55, 59, 62 ].midicps)); 
+	Out.ar([0, 1], carrier * envelope * 0.1);
+	};
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,13 +266,22 @@ SystemClock.sched(30, {c.clear(5)};);
 
 d = NodeProxy.new.play;
 d.fadeTime = 2;
-d.source = {f = LFSaw.kr(0.4, 0, 24, LFSaw.kr([8,7.23], 0, 3, 80)).midicps;	CombN.ar(SinOsc.ar(f,0,0.04), 0.2, 0.2,4)};
+d.source = {
+f = LFSaw.kr(0.4, 0, 24, LFSaw.kr([8,7.23], 0, 3, 80)).midicps;
+CombN.ar(SinOsc.ar(f,0,0.04), 0.2, 0.2,4)
+};
 d.clear(5);
 
 
 e = NodeProxy.new.play;
 e.fadeTime = 2;
-e.source = { var sig, noiseLfo; noiseLfo = LFNoise1.kr(50); sig = Mix.ar(LFTri.ar(freq: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], mul: LFPulse.ar(freq: noiseLfo.range(0.5,15), width: 0.4))); sig = LPF.ar(sig, noiseLfo.range(262, 523)); sig = FreeVerb.ar(sig); Out.ar(0, Pan2.ar(sig, noiseLfo.range(1,-1)) * 0.2);};
+e.source = { 
+	var sig, noiseLfo; noiseLfo = LFNoise1.kr(50); 
+	sig = Mix.ar(LFTri.ar(freq: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], 
+	mul: LFPulse.ar(freq: noiseLfo.range(0.5,15), width: 0.4))); 
+	sig = LPF.ar(sig, noiseLfo.range(262, 523)); 
+	sig = FreeVerb.ar(sig); Out.ar(0, Pan2.ar(sig, noiseLfo.range(1,-1)) * 0.2);
+	};
 
 
 x = Pbind(\instrument, \piano, \freq, 262, \dur, 0.5).play;
