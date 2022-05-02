@@ -8,16 +8,7 @@ s.volume = -12; // to avoid distortion
 
 a = NodeProxy.new.play;
 a.fadeTime = 2;
-a.source = { 
-	var trigger, carrier, modulator, envelope; 
-	trigger = Impulse.kr(0.5); 
-	envelope = Linen.kr(gate: trigger, attackTime: 1.2, susLevel: 0.5, releaseTime: 0.7);
-	carrier = Mix.ar(FSinOsc.ar( freq: [ 48, 55, 59, 62 ].midicps)); 
-	Out.ar([0, 1], carrier * envelope * 0.1);
-	};
-
-
-////////////////////////////////////////////////////////////////////////////////
+a.source = { var trigger, carrier, modulator, envelope; trigger = Impulse.kr(0.5); envelope = Linen.kr(gate: trigger, attackTime: 1.2, susLevel: 0.5, releaseTime: 0.7);carrier = Mix.ar(FSinOsc.ar( freq: [ 50, 52, 59, 62 ].midicps)); Out.ar([0, 1], carrier * envelope * 0.1);};
 
 
 // load our buffers
@@ -34,7 +25,7 @@ q = Buffer.read(s, "C:/Users/user/Desktop/sounds/untitled.wav");
 SynthDef(\piano, {
   arg freq = 50, index = 0.7, release = 4;
   var modFreq1, modFreq2, depth1, depth2, envelope, modulators, fm;
-  modFreq1 = freq * 1;
+  modFreq1 = freq * 0.5;
   modFreq2 = freq * 4;
   index = 0.7;
   depth1 = modFreq1 * index;
@@ -67,7 +58,7 @@ SynthDef(\bell,
 // string synth
 
 (
-SynthDef(\cfstring1, { arg i_out, freq = 360, gate = 1, pan, amp=0.1;
+SynthDef(\string, { arg i_out, freq = 260, gate = 1, pan, amp=0.1;
     var out, eg, fc, osc, a, b, w;
     fc = LinExp.kr(LFNoise1.kr(Rand(0.25, 0.4)), -1, 1, 500, 2000);
     osc = Mix.fill(8, {LFSaw.ar(freq * [Rand(0.99, 1.01), Rand(0.99, 1.01)], 0, amp) }).distort * 0.2;
@@ -149,7 +140,7 @@ SynthDef.new(\sustained,{
 // bass synth
 
 (
-SynthDef("MyBass", { arg freq = 40, sustain = 1, amp = 0.08, att = 0.1, rel = 5, lofreq = 1000, hifreq = 3000;
+SynthDef(\bass, { arg freq = 40, sustain = 1, amp = 0.08, att = 0.1, rel = 5, lofreq = 1000, hifreq = 3000;
     var env = Line.kr(start: 0.7, end: 0, dur: 10), snd;
     snd = Saw.ar(freq: freq * [0.99, 1, 1.001, 1.008], mul: env);
 	snd = LPF.ar(
@@ -191,7 +182,7 @@ SynthDef(\chaosGlitch, {
 
 
 (
-SynthDef("klankPink", {
+SynthDef(\ambience, {
     var excitation, signal, env, panner;
     excitation = PinkNoise.ar(0.008);
     signal = Klank.ar(
@@ -213,12 +204,7 @@ SynthDef("klankPink", {
 
 ///////////////////////////////////////////////////////////////////
 
-
 b = Synth(\bell);
-
-
-//////////////////////////////////////////////////////////////////
-
 
 // Additive Synthesis (based on Fourier Theorem)
 
@@ -244,7 +230,6 @@ SystemClock.sched(30, {c.clear(5)};);
 )
 
 
-
 ///////////////////////////////////////////////////////////////////
 
 
@@ -256,7 +241,6 @@ SystemClock.sched(30, {c.clear(5)};);
 
 ///////////////////////////////////////////////////////////////////
 
-
 // Herbert Eimert - serialism
 // (based on Schoenberg's 12-tone technique)
 
@@ -266,22 +250,13 @@ SystemClock.sched(30, {c.clear(5)};);
 
 d = NodeProxy.new.play;
 d.fadeTime = 2;
-d.source = {
-f = LFSaw.kr(0.4, 0, 24, LFSaw.kr([8,7.23], 0, 3, 80)).midicps;
-CombN.ar(SinOsc.ar(f,0,0.04), 0.2, 0.2,4)
-};
+d.source = {f = LFSaw.kr(0.4, 0, 24, LFSaw.kr([8,7.23], 0, 3, 80)).midicps;	CombN.ar(SinOsc.ar(f,0,0.04), 0.2, 0.2,4)};
 d.clear(5);
 
 
 e = NodeProxy.new.play;
 e.fadeTime = 2;
-e.source = { 
-	var sig, noiseLfo; noiseLfo = LFNoise1.kr(50); 
-	sig = Mix.ar(LFTri.ar(freq: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], 
-	mul: LFPulse.ar(freq: noiseLfo.range(0.5,15), width: 0.4))); 
-	sig = LPF.ar(sig, noiseLfo.range(262, 523)); 
-	sig = FreeVerb.ar(sig); Out.ar(0, Pan2.ar(sig, noiseLfo.range(1,-1)) * 0.2);
-	};
+e.source = { var sig, noiseLfo; noiseLfo = LFNoise1.kr(50); sig = Mix.ar(LFTri.ar(freq: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], mul: LFPulse.ar(freq: noiseLfo.range(0.5,15), width: 0.4))); sig = LPF.ar(sig, noiseLfo.range(262, 523)); sig = FreeVerb.ar(sig); Out.ar(0, Pan2.ar(sig, noiseLfo.range(1,-1)) * 0.2);};
 
 
 x = Pbind(\instrument, \piano, \freq, 262, \dur, 0.5).play;
@@ -292,29 +267,19 @@ x = Pbind(\instrument, \piano, \freq, 262, \dur, 0.5).play;
 // Karlheinz Stockhausen - Aleatory Techniques
 // some musical aspects are left to chance
 
-
-// inspired by Model 17
-
-
-i = NodeProxy.new.play;
-i.fadeTime = 2;
-i.source = { var f, p, z, offset; f = 50; p = 20; z = 0.0; offset = Line.kr(0, -0.02, 60); p.do({ arg i; z = FSinOsc.ar( f * (i+1),0, max(0, LFNoise1.kr( 6 + [4.0.rand2, 4.0.rand2],  0.02, ) ), z ) }); z };
-
-
 p = Prand(list: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], repeats: inf );
 
 y = Pbind(\instrument, \piano, \freq, p, \dur, 0.5).play;
 
-x.stop;
 y.stop;
-
 
 // integral serialism
 
-r = Prand(list: [\piano,\cfstring1,\bell], repeats: inf);
+r = Prand(list: [\piano,\string,\bell], repeats: inf);
 
 z = Pbind(\instrument, r, \freq, p, \dur, 0.5).play;
 
+x.stop;
 
 ///////////////////////////////////////////////////////////////////
 
@@ -331,15 +296,18 @@ z = Pbind(\instrument, r, \freq, p, \dur, 0.5).play;
 
 // inspired by Symphonie pour un homme seul
 
-~player1 = Synth(\slicer, [\bufnum, o]);
+~player1 = Synth(\chorus, [\bufnum, q]);
 
-y.stop;
+~player1.free;
+
+~player2 = Synth(\slicer, [\bufnum, o]);
+
 
 f = Synth(\impulse);
 
 z.stop;
 
-~player1.set(\t, 8);
+~player2.set(\t, 8);
 
 g = Synth(\sustained);
 
@@ -349,6 +317,10 @@ h.source = {BPZ2.ar(WhiteNoise.ar(LFPulse.kr(MouseX.kr(0.2,50), 0, 0.25, 0.1)))}
 h.clear(3);
 
 e.clear(5);
+
+///////////////////////////////////////////////////////////////////
+
+// Moving to the USA
 
 // Steve Reich - Phase Shifting
 
@@ -361,12 +333,9 @@ e.clear(5);
 
 ~inst1=~steady.play;
 ~inst2=~phasing.play;
+~inst3 = ~phasing.play;
 
-///////////////////////////////////////////////////////////////////
-
-// Moving to the USA
 // John Cage
-
 
 // transition inspired by 4:33
 
@@ -375,15 +344,15 @@ a.clear(5);
 q.play;
 
 ~inst2.stop;
-~player1.free;
-
+~inst1.stop;
+~player2.free;
 
 ///////////////////////////////////////////////////////////////////
 
 // Moving on to the Electroacoustic Music Evolution (1960-1990)
 
 
-~player2 = Synth(\MyBass);
+~player2 = Synth(\bass);
 
 
 ///////////////////////////////////////////////////////////////////
@@ -391,6 +360,10 @@ q.play;
 
 // Xenakis - Stochastic Music
 // watch the cursor!
+
+i = NodeProxy.new.play;
+i.fadeTime = 2;
+i.source = { var f, p, z, offset; f = 50; p = 20; z = 0.0; offset = Line.kr(0, -0.02, 60); p.do({ arg i; z = FSinOsc.ar( f * (i+1),0, max(0, LFNoise1.kr( 6 + [4.0.rand2, 4.0.rand2],  0.02, ) ), z ) }); z };
 
 
 // inspired by Diamorphoses
@@ -413,6 +386,7 @@ k.fadeTime = 2;
 k.source = {WhiteNoise.ar(0.05,0)};
 
 
+
 // a hi-hat sound using white noise and a resonant high-pass filter
 
 k.source = {var hihat, env; hihat = RHPF.ar(in: WhiteNoise.ar(0.1), freq: 9000, rq: 0.4); env = EnvGen.kr(envelope: Env.perc(0.01, 0.4), gate: Impulse.kr(2)); hihat.dup * env * 0.4};
@@ -424,12 +398,13 @@ k.source = {var hihat, env; hihat = RHPF.ar(in: WhiteNoise.ar(0.1), freq: 9000, 
 
 l = Pbind(\instrument, \chaosGlitch,\dur, 10,\len, Prand([1, 1.5, 1.75, 2]+10,inf),\henA, Prand([2, 1.3, 1.29, 1.25], inf),	\henB, Prand([0.2, 0.3], inf),\t, Prand([2, 4, 2, 6], inf),\fundFreq, Prand([40, 600, 8000, 200, 600, 6000], inf)).play;
 
+
 ///////////////////////////////////////////////////////////////////
 
 // Ambience
 
 
-~player3 = Synth("klankPink");
+~player3 = Synth(\ambience);
 
 
 i.clear(5);
@@ -455,15 +430,14 @@ m.clear(5);
 l = Synth(\bell);
 
 
-
-
 ///////////////////////////////////////////////////////////////////
 
 
 // Thank you, I hope you enjoyed your trip!
 
 
-/////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+
 
 // References
 //
@@ -474,4 +448,3 @@ l = Synth(\bell);
 // Rumush, 2015, ChaosGlitch Synth, https://sccode.org/1-50l
 // SuperCollider official documentation, https://doc.sccode.org/
 // Wilson, S.; Cottle, D.; Collins, N., 2011, The SuperCollider Book, https://mitpress.mit.edu/books/supercollider-book
-
