@@ -2,12 +2,16 @@
 
 // Are you ready for your electroacoustic music trip?
 
+
 s.volume = -12; // to avoid distortion
 
-h = NodeProxy.new.play;
-h.fadeTime = 2;
-h.source = { var trigger, carrier, modulator, envelope; trigger = Impulse.kr(0.5); envelope = Linen.kr(gate: trigger, attackTime: 1.2, susLevel: 0.5, releaseTime: 0.7); carrier = Mix.ar(FSinOsc.ar( freq: [ 48, 55, 59, 62 ].midicps)); Out.ar([0, 1], carrier * envelope * 0.1);};
 
+a = NodeProxy.new.play;
+a.fadeTime = 2;
+a.source = { var trigger, carrier, modulator, envelope; trigger = Impulse.kr(0.5); envelope = Linen.kr(gate: trigger, attackTime: 1.2, susLevel: 0.5, releaseTime: 0.7); carrier = Mix.ar(FSinOsc.ar( freq: [ 48, 55, 59, 62 ].midicps)); Out.ar([0, 1], carrier * envelope * 0.1);};
+
+
+////////////////////////////////////////////////////////////////////////////////
 
 
 // load our buffers
@@ -22,10 +26,10 @@ q = Buffer.read(s, "C:/Users/user/Desktop/sounds/untitled.wav");
 
 (
 SynthDef(\piano, {
-  arg freq = 50, index = 0.7, release = 2;
+  arg freq = 50, index = 0.7, release = 4;
   var modFreq1, modFreq2, depth1, depth2, envelope, modulators, fm;
-  modFreq1 = freq * 1.01;
-  modFreq2 = freq * 4.01;
+  modFreq1 = freq * 1;
+  modFreq2 = freq * 4;
   index = 0.7;
   depth1 = modFreq1 * index;
   depth2 = modFreq2 * index;
@@ -35,6 +39,7 @@ SynthDef(\piano, {
   Out.ar([0, 1], fm * 0.3);
 }).add;
 );
+
 
 // bell Synth
 
@@ -202,10 +207,11 @@ SynthDef("klankPink", {
 
 ///////////////////////////////////////////////////////////////////
 
-l = Synth(\bell);
+
+b = Synth(\bell);
 
 
-
+//////////////////////////////////////////////////////////////////
 
 
 // Additive Synthesis (based on Fourier Theorem)
@@ -213,24 +219,24 @@ l = Synth(\bell);
 // Starting with one oscillator
 
 
-a = NodeProxy.new.play;
-a.fadeTime = 2;
-a.source = {FSinOsc.ar(freq:262, mul:0.2)};
-
+c = NodeProxy.new.play;
+c.fadeTime = 2;
+c.source = {FSinOsc.ar(freq:262, mul:0.2)};
 
 
 // Adding 4 oscillators
 
 
 (
-a.source = {Mix.ar(FSinOsc.ar(freq:[207,262,311,415], mul:0.2))};
+c.source = {Mix.ar(FSinOsc.ar(freq:[155,196,246,293], mul:0.2))};
 
-SystemClock.sched(10, {a.source = {Mix.ar(FSinOsc.ar(freq:[233,293,349,466], mul:0.2))};});
+SystemClock.sched(10, {c.source = {Mix.ar(FSinOsc.ar(freq:[246,277,293,349], mul:0.2))};});
 
-SystemClock.sched(20, {a.source = {Mix.ar(FSinOsc.ar(freq:[207,262,311,415], mul:0.2))};});
+SystemClock.sched(20, {c.source = {Mix.ar(FSinOsc.ar(freq:[146,174,261,277], mul:0.2))};});
 
-SystemClock.sched(30, {a.clear(5)};);
+SystemClock.sched(30, {c.clear(5)};);
 )
+
 
 
 ///////////////////////////////////////////////////////////////////
@@ -249,23 +255,21 @@ SystemClock.sched(30, {a.clear(5)};);
 // (based on Schoenberg's 12-tone technique)
 
 
-b = NodeProxy.new.play;
-b.fadeTime = 2;
-b.source = {f = LFSaw.kr(0.4, 0, 24, LFSaw.kr([8,7.23], 0, 3, 80)).midicps;	CombN.ar(SinOsc.ar(f,0,0.04), 0.2, 0.2,4)};
-b.clear(5);
+// inspired by Klangstudie II
 
 
-c = NodeProxy.new.play;
-c.fadeTime = 2;
-c.source = { var sig, noiseLfo; noiseLfo = LFNoise1.kr(50); sig = Mix.ar(LFTri.ar(freq: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], mul: LFPulse.ar(freq: noiseLfo.range(0.5,15), width: 0.4))); sig = LPF.ar(sig, noiseLfo.range(262, 523)); sig = FreeVerb.ar(sig); Out.ar(0, Pan2.ar(sig, noiseLfo.range(1,-1)) * 0.2);};
+d = NodeProxy.new.play;
+d.fadeTime = 2;
+d.source = {f = LFSaw.kr(0.4, 0, 24, LFSaw.kr([8,7.23], 0, 3, 80)).midicps;	CombN.ar(SinOsc.ar(f,0,0.04), 0.2, 0.2,4)};
+d.clear(5);
+
+
+e = NodeProxy.new.play;
+e.fadeTime = 2;
+e.source = { var sig, noiseLfo; noiseLfo = LFNoise1.kr(50); sig = Mix.ar(LFTri.ar(freq: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], mul: LFPulse.ar(freq: noiseLfo.range(0.5,15), width: 0.4))); sig = LPF.ar(sig, noiseLfo.range(262, 523)); sig = FreeVerb.ar(sig); Out.ar(0, Pan2.ar(sig, noiseLfo.range(1,-1)) * 0.2);};
 
 
 x = Pbind(\instrument, \piano, \freq, 262, \dur, 0.5).play;
-x.stop;
-y = Pbind(\instrument, \piano, \freq, p, \dur, 0.5).play;
-y.stop;
-p = Prand(list: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], repeats: inf );
-
 
 
 ///////////////////////////////////////////////////////////////////
@@ -274,13 +278,34 @@ p = Prand(list: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466
 // some musical aspects are left to chance
 
 
-z = Pbind(\instrument, \piano, \freq, p, \dur, 0.5).play;
+// inspired by Model 17
+
+
+i = NodeProxy.new.play;
+i.fadeTime = 2;
+i.source = { var f, p, z, offset; f = 50; p = 20; z = 0.0; offset = Line.kr(0, -0.02, 60); p.do({ arg i; z = FSinOsc.ar( f * (i+1),0, max(0, LFNoise1.kr( 6 + [4.0.rand2, 4.0.rand2],  0.02, ) ), z ) }); z };
+
+
+p = Prand(list: [262, 277.2, 293.7, 311, 329.6, 349.2, 370, 392, 415.3, 440, 466.2, 493.9, 523.3], repeats: inf );
+
+y = Pbind(\instrument, \piano, \freq, p, \dur, 0.5).play;
+
+x.stop;
+y.stop;
+
+
+// integral serialism
+
+r = Prand(list: [\piano,\cfstring1,\bell], repeats: inf);
+
+z = Pbind(\instrument, r, \freq, p, \dur, 0.5).play;
+
 
 ///////////////////////////////////////////////////////////////////
 
 // ..and now let's visit Paris, France!
 
-// Here we will meet Musique Concrete
+// Here we will meet Musique Concrète
 
 // The 'polar opposite' of Elektronische Musik
 
@@ -289,43 +314,57 @@ z = Pbind(\instrument, \piano, \freq, p, \dur, 0.5).play;
 
 // Pierre Schaeffer - Sampling
 
+// inspired by Symphonie pour un homme seul
+
 ~player1 = Synth(\slicer, [\bufnum, o]);
 
-x.stop;
 y.stop;
+
+f = Synth(\impulse);
+
 z.stop;
 
-i = Synth(\impulse);
-
-~chorus = Synth(\chorus,[\bufnum,b]);
-~chorus.free;
 ~player1.set(\t, 8);
 
-t = Synth(\sustained);
+g = Synth(\sustained);
 
-m = NodeProxy.new.play;
-m.fadeTime = 2;
-m.source = {BPZ2.ar(WhiteNoise.ar(LFPulse.kr(MouseX.kr(0.2,50), 0, 0.25, 0.1)))};
-m.clear(3);
+h = NodeProxy.new.play;
+h.fadeTime = 2;
+h.source = {BPZ2.ar(WhiteNoise.ar(LFPulse.kr(MouseX.kr(0.2,50), 0, 0.25, 0.1)))};
+h.clear(3);
 
-b.clear(5);
-c.clear(5);
+e.clear(5);
 
+~freqs=[64, 66, 71, 73, 74, 66, 64, 73, 71, 66, 74, 73].collect(_.midicps);
+~time=0.25;
+
+~steady=Routine({var i=0;{var pitch=~freqs[i%12];Synth(\piano, [freq:pitch,pan:-0.4]);	i=i+1;0.25.wait;}.loop;});
+
+~phasing=Routine({var i=0, phase=0;	{var pitch=~freqs[i%12];Synth(\piano, [freq:pitch, pan:0.4]);i=i+1;if (rrand(0, 80)==0, {			~time=0.24;phase=i;});if (i-phase==25, {phase=0;~time=0.25;});		~time.wait;}.loop;});
+
+~inst1=~steady.play;
+~inst2=~phasing.play;
 
 ///////////////////////////////////////////////////////////////////
 
 // Moving to the USA
 // John Cage
 
-h.clear(5);
+
+// transition inspired by 4:33
+
+
+a.clear(5);
 q.play;
 
-
+~inst2.stop;
 ~player1.free;
+
 
 ///////////////////////////////////////////////////////////////////
 
 // Moving on to the Electroacoustic Music Evolution (1960-1990)
+
 
 ~player2 = Synth(\MyBass);
 
@@ -336,14 +375,13 @@ q.play;
 // Xenakis - Stochastic Music
 // watch the cursor!
 
-k = NodProxy.new.play;
-k.fadeTime = 2;
-k.source = { var f, p, z, offset; f = 50; p = 20; z = 0.0; offset = Line.kr(0, -0.02, 60); p.do({ arg i; z = FSinOsc.ar( f * (i+1),0, max(0, LFNoise1.kr( 6 + [4.0.rand2, 4.0.rand2],  0.02, ) ), z ) }); z }.play;
+
+// inspired by Diamorphoses
 
 
-d = NodeProxy.new.play;
-d.fadeTime = 2;
-d.source  = {Pan2.ar(Normalizer.ar(RLPF.ar(RLPF.ar(Gendy2.ar(a:SinOsc.kr(0.4,0,0.05,0.05),c:SinOsc.kr(0.3,0,0.1,0.5)),MouseX.kr(10,10000,'exponential'),0.05),MouseY.kr(10,10000,'exponential'),0.05),0.9),Lag.kr(LFNoise0.kr(1),0.5))};
+j = NodeProxy.new.play;
+j.fadeTime = 2;
+j.source  = {Pan2.ar(Normalizer.ar(RLPF.ar(RLPF.ar(Gendy2.ar(a:SinOsc.kr(0.4,0,0.05,0.05),c:SinOsc.kr(0.3,0,0.1,0.5)),MouseX.kr(10,10000,'exponential'),0.05),MouseY.kr(10,10000,'exponential'),0.05),0.9),Lag.kr(LFNoise0.kr(1),0.5))};
 
 
 ///////////////////////////////////////////////////////////////////
@@ -353,24 +391,21 @@ d.source  = {Pan2.ar(Normalizer.ar(RLPF.ar(RLPF.ar(Gendy2.ar(a:SinOsc.kr(0.4,0,0
 // Post-Schaefferian Electronica
 // Noise
 
-e = NodeProxy.new.play;
-e.fadeTime = 2;
-e.source = {WhiteNoise.ar(0.05,0)};
+k = NodeProxy.new.play;
+k.fadeTime = 2;
+k.source = {WhiteNoise.ar(0.05,0)};
+
 
 // a hi-hat sound using white noise and a resonant high-pass filter
 
-e.source = {var hihat, env; hihat = RHPF.ar(in: WhiteNoise.ar(0.1), freq: 9000, rq: 0.4); env = EnvGen.kr(envelope: Env.perc(0.01, 0.4), gate: Impulse.kr(2)); hihat.dup * env * 0.4};
+k.source = {var hihat, env; hihat = RHPF.ar(in: WhiteNoise.ar(0.1), freq: 9000, rq: 0.4); env = EnvGen.kr(envelope: Env.perc(0.01, 0.4), gate: Impulse.kr(2)); hihat.dup * env * 0.4};
 
-e.clear(5);
 
 ///////////////////////////////////////////////////////////////////
 
-// microsounds (glitches) 
+// microsounds (glitches)
 
-f= Pbind(\instrument, \chaosGlitch,\dur, 10,\len, Prand([1, 1.5, 1.75, 2]+10,inf),\henA, Pseq([2, 1.3, 1.29, 1.25], inf),	\henB, Pseq([0.2, 0.3], inf),\t, Prand([2, 4, 2, 6], inf),\fundFreq, Prand([40, 600, 8000, 200, 600, 6000], inf)).play;
-
-
-
+l = Pbind(\instrument, \chaosGlitch,\dur, 10,\len, Prand([1, 1.5, 1.75, 2]+10,inf),\henA, Prand([2, 1.3, 1.29, 1.25], inf),	\henB, Prand([0.2, 0.3], inf),\t, Prand([2, 4, 2, 6], inf),\fundFreq, Prand([40, 600, 8000, 200, 600, 6000], inf)).play;
 
 ///////////////////////////////////////////////////////////////////
 
@@ -380,28 +415,29 @@ f= Pbind(\instrument, \chaosGlitch,\dur, 10,\len, Prand([1, 1.5, 1.75, 2]+10,inf
 ~player3 = Synth("klankPink");
 
 
-
+i.clear(5);
+j.clear(5);
 k.clear(5);
-d.clear(5);
-e.clear(5);
-f.stop;
+l.stop;
 
 
 ///////////////////////////////////////////////////////////////////
 
 // Soundscape
 
-g = NodeProxy.new.play;
-g.fadeTime = 2;
-g.source = {Mix.fill(10,{var freq; freq= rrand(130,160.3);  Pan2.ar(SinOsc.ar(Gendy2.ar(6.rand,6.rand,SinOsc.kr(0.1,0,0.49,0.51),SinOsc.kr(0.13,0,0.49,0.51),freq ,freq, SinOsc.kr(0.17,0,0.49,0.51), SinOsc.kr(0.19,0,0.49,0.51),12, 12, 0.4.rand, 0.4.rand, 200, 400), 0, 0.1), 1.0.rand2)})};
+m = NodeProxy.new.play;
+m.fadeTime = 2;
+m.source = {Mix.fill(10,{var freq; freq= rrand(130,160.3);  Pan2.ar(SinOsc.ar(Gendy2.ar(6.rand,6.rand,SinOsc.kr(0.1,0,0.49,0.51),SinOsc.kr(0.13,0,0.49,0.51),freq ,freq, SinOsc.kr(0.17,0,0.49,0.51), SinOsc.kr(0.19,0,0.49,0.51),12, 12, 0.4.rand, 0.4.rand, 200, 400), 0, 0.1), 1.0.rand2)})};
 
 
 
 ~player3.free;
-g.clear(5);
-f.clear(5);
+m.clear(5);
+
 
 l = Synth(\bell);
+
+
 
 
 ///////////////////////////////////////////////////////////////////
