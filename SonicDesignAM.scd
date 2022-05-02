@@ -335,6 +335,8 @@ h.clear(3);
 
 e.clear(5);
 
+// Steve Reich - Phase Shifting
+
 ~freqs=[64, 66, 71, 73, 74, 66, 64, 73, 71, 66, 74, 73].collect(_.midicps);
 ~time=0.25;
 
@@ -444,3 +446,17 @@ l = Synth(\bell);
 
 
 // Thank you, I hope you enjoyed your trip!
+
+
+/////////////////////////////////////////////////////////////////
+
+// References
+//
+// Curtis, R., 1995, The Computer Music Tutorial
+// Eastman Audio Research Studio notes, https://www.esm.rochester.edu/ears/docs/supercollider/examples/
+// Karamanlis, O., 2021, Σύνθεση και Επεξεργασία Ήχου με το SuperCollider, https://synthesis.orestiskaramanlis.net/
+// LaFleur, E., 2020, Programming Steve Reich’s Piano Phase in SuperCollider, https://www.ezralafleur.com/programming-steve-reichs-piano-phase-in-supercollider/
+// Rumush, 2015, ChaosGlitch Synth, https://sccode.org/1-50l
+// SuperCollider official documentation, https://doc.sccode.org/
+// Wilson, S.; Cottle, D.; Collins, N., 2011, The SuperCollider Book, https://mitpress.mit.edu/books/supercollider-book
+
