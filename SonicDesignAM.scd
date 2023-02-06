@@ -19,7 +19,7 @@ a.source = {
 // load our buffers
 
 o = Buffer.read(s, "C:/Users/user/Desktop/sounds/Hist1.wav");
-q = Buffer.read(s, "C:/Users/user/Desktop/sounds/untitled.wav");
+q = Buffer.read(s, "C:/Users/user/Desktop/sounds/sh.wav");
 
 
 // load our Synths
