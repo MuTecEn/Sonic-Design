@@ -284,7 +284,7 @@ z = Pbind(\instrument, r, \freq, p, \dur, 0.5).play;
 ///////////////////////////////////////////////////////////////////
 
 
-// Pierre Schaeffer - Sampling
+// Pierre Schaeffer - Tape Manipulation
 
 // inspired by Symphonie pour un homme seul
 
@@ -370,7 +370,7 @@ q.play;
 
 
 // Xenakis - Stochastic Music
-// watch the cursor!
+// move the cursor!
 
 i = NodeProxy.new.play;
 i.fadeTime = 2;
